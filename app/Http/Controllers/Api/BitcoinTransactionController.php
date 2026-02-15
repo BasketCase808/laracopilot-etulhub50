@@ -18,12 +18,53 @@ class BitcoinTransactionController extends Controller
     
     public function sendBitcoin(Request $request)
     {
+        $client = $request->input('api_client');
+        
+        // Check permission
+        if (!$client->can_send_transactions) {
+            return response()->json([
+                'success' => false,
+                'error' => 'Permission denied',
+                'message' => 'Your API client does not have permission to send transactions'
+            ], 403);
+        }
+        
         $validated = $request->validate([
             'address' => 'required|string',
             'amount' => 'required|numeric|min:0.00000001',
             'comment' => 'nullable|string',
             'subtract_fee' => 'nullable|boolean'
         ]);
+        
+        // Check max transaction amount
+        if ($validated['amount'] > $client->max_transaction_amount) {
+            return response()->json([
+                'success' => false,
+                'error' => 'Amount limit exceeded',
+                'message' => "Transaction amount ({$validated['amount']} BTC) exceeds your limit ({$client->max_transaction_amount} BTC)",
+                'max_allowed' => $client->max_transaction_amount,
+                'requested' => $validated['amount']
+            ], 403);
+        }
+        
+        // Check daily limit if set
+        if ($client->daily_transaction_limit) {
+            $todayTotal = Transaction::where('api_client_id', $client->id)
+                ->where('type', 'send')
+                ->whereDate('created_at', today())
+                ->sum('amount');
+            
+            if (($todayTotal + $validated['amount']) > $client->daily_transaction_limit) {
+                return response()->json([
+                    'success' => false,
+                    'error' => 'Daily limit exceeded',
+                    'message' => "This transaction would exceed your daily limit ({$client->daily_transaction_limit} BTC)",
+                    'daily_limit' => $client->daily_transaction_limit,
+                    'used_today' => floatval($todayTotal),
+                    'remaining' => floatval($client->daily_transaction_limit - $todayTotal)
+                ], 403);
+            }
+        }
         
         try {
             // Validate address first
@@ -47,7 +88,7 @@ class BitcoinTransactionController extends Controller
             
             // Log transaction
             $transaction = Transaction::create([
-                'api_client_id' => $request->input('api_client')->id,
+                'api_client_id' => $client->id,
                 'txid' => $txid,
                 'address' => $validated['address'],
                 'amount' => $validated['amount'],
@@ -79,6 +120,16 @@ class BitcoinTransactionController extends Controller
     
     public function getTransaction(Request $request, $txid)
     {
+        $client = $request->input('api_client');
+        
+        if (!$client->can_list_transactions) {
+            return response()->json([
+                'success' => false,
+                'error' => 'Permission denied',
+                'message' => 'Your API client does not have permission to view transactions'
+            ], 403);
+        }
+        
         try {
             $transaction = $this->bitcoinRpc->call('gettransaction', [$txid]);
             
@@ -97,6 +148,16 @@ class BitcoinTransactionController extends Controller
     
     public function listTransactions(Request $request)
     {
+        $client = $request->input('api_client');
+        
+        if (!$client->can_list_transactions) {
+            return response()->json([
+                'success' => false,
+                'error' => 'Permission denied',
+                'message' => 'Your API client does not have permission to list transactions'
+            ], 403);
+        }
+        
         $validated = $request->validate([
             'count' => 'nullable|integer|min:1|max:100',
             'skip' => 'nullable|integer|min:0'

@@ -17,6 +17,16 @@ class BitcoinWalletController extends Controller
     
     public function getBalance(Request $request)
     {
+        $client = $request->input('api_client');
+        
+        if (!$client->can_view_balance) {
+            return response()->json([
+                'success' => false,
+                'error' => 'Permission denied',
+                'message' => 'Your API client does not have permission to view balance'
+            ], 403);
+        }
+        
         try {
             $balance = $this->bitcoinRpc->call('getbalance');
             
@@ -25,7 +35,7 @@ class BitcoinWalletController extends Controller
                 'data' => [
                     'balance' => $balance,
                     'balance_btc' => number_format($balance, 8),
-                    'client' => $request->input('api_client')->name
+                    'client' => $client->name
                 ]
             ]);
         } catch (\Exception $e) {
@@ -39,6 +49,16 @@ class BitcoinWalletController extends Controller
     
     public function generateAddress(Request $request)
     {
+        $client = $request->input('api_client');
+        
+        if (!$client->can_generate_addresses) {
+            return response()->json([
+                'success' => false,
+                'error' => 'Permission denied',
+                'message' => 'Your API client does not have permission to generate addresses'
+            ], 403);
+        }
+        
         $validated = $request->validate([
             'label' => 'nullable|string|max:255'
         ]);
@@ -53,7 +73,7 @@ class BitcoinWalletController extends Controller
                 'data' => [
                     'address' => $address,
                     'label' => $validated['label'] ?? null,
-                    'client' => $request->input('api_client')->name
+                    'client' => $client->name
                 ]
             ], 201);
         } catch (\Exception $e) {
@@ -67,6 +87,16 @@ class BitcoinWalletController extends Controller
     
     public function listAddresses(Request $request)
     {
+        $client = $request->input('api_client');
+        
+        if (!$client->can_list_transactions) {
+            return response()->json([
+                'success' => false,
+                'error' => 'Permission denied',
+                'message' => 'Your API client does not have permission to list addresses'
+            ], 403);
+        }
+        
         try {
             $addresses = $this->bitcoinRpc->call('listreceivedbyaddress', [0, true]);
             
@@ -88,6 +118,16 @@ class BitcoinWalletController extends Controller
     
     public function validateAddress(Request $request)
     {
+        $client = $request->input('api_client');
+        
+        if (!$client->can_validate_addresses) {
+            return response()->json([
+                'success' => false,
+                'error' => 'Permission denied',
+                'message' => 'Your API client does not have permission to validate addresses'
+            ], 403);
+        }
+        
         $validated = $request->validate([
             'address' => 'required|string'
         ]);

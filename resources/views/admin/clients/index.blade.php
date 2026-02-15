@@ -19,7 +19,7 @@
             <tr>
                 <th class="px-6 py-4 text-left text-sm font-semibold uppercase tracking-wider">Client Details</th>
                 <th class="px-6 py-4 text-left text-sm font-semibold uppercase tracking-wider">API Key</th>
-                <th class="px-6 py-4 text-left text-sm font-semibold uppercase tracking-wider">Whitelist</th>
+                <th class="px-6 py-4 text-left text-sm font-semibold uppercase tracking-wider">Limits</th>
                 <th class="px-6 py-4 text-left text-sm font-semibold uppercase tracking-wider">Transactions</th>
                 <th class="px-6 py-4 text-left text-sm font-semibold uppercase tracking-wider">Status</th>
                 <th class="px-6 py-4 text-right text-sm font-semibold uppercase tracking-wider">Actions</th>
@@ -49,20 +49,15 @@
                 </td>
                 <td class="px-6 py-4">
                     <div class="text-sm">
-                        @if($client->allowed_domains)
-                            <div class="mb-1">
-                                <i class="fas fa-globe text-blue-500 mr-1"></i>
-                                <span class="text-gray-700">{{ str($client->allowed_domains)->limit(30) }}</span>
-                            </div>
-                        @endif
-                        @if($client->allowed_ips)
+                        <div class="mb-1">
+                            <i class="fas fa-coins text-orange-500 mr-1"></i>
+                            <span class="font-semibold">Max:</span> {{ $client->max_transaction_amount }} BTC
+                        </div>
+                        @if($client->daily_transaction_limit)
                             <div>
-                                <i class="fas fa-network-wired text-green-500 mr-1"></i>
-                                <span class="text-gray-700">{{ str($client->allowed_ips)->limit(30) }}</span>
+                                <i class="fas fa-calendar-day text-purple-500 mr-1"></i>
+                                <span class="font-semibold">Daily:</span> {{ $client->daily_transaction_limit }} BTC
                             </div>
-                        @endif
-                        @if(!$client->allowed_domains && !$client->allowed_ips)
-                            <span class="text-gray-400 text-xs">No restrictions</span>
                         @endif
                     </div>
                 </td>
@@ -81,6 +76,10 @@
                 </td>
                 <td class="px-6 py-4 text-right">
                     <div class="flex justify-end space-x-2">
+                        <a href="{{ route('admin.clients.permissions', $client->id) }}" class="text-green-600 hover:text-green-700 px-3 py-1 rounded hover:bg-green-50 transition-all" title="Permissions">
+                            <i class="fas fa-shield-alt"></i>
+                        </a>
+                        
                         <a href="{{ route('admin.clients.edit', $client->id) }}" class="text-blue-600 hover:text-blue-700 px-3 py-1 rounded hover:bg-blue-50 transition-all" title="Edit">
                             <i class="fas fa-edit"></i>
                         </a>

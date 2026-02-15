@@ -25,6 +25,16 @@
                     <span class="ml-3">Dashboard</span>
                 </a>
                 
+                <a href="{{ route('admin.bitcoin.monitor') }}" class="flex items-center px-6 py-3 text-gray-300 hover:bg-slate-700 hover:text-white transition-all duration-300 {{ request()->routeIs('admin.bitcoin.monitor') ? 'bg-slate-700 text-white border-l-4 border-orange-500' : '' }}">
+                    <i class="fas fa-server w-5"></i>
+                    <span class="ml-3">BTC Monitor</span>
+                </a>
+                
+                <a href="{{ route('admin.bitcoin.commands') }}" class="flex items-center px-6 py-3 text-gray-300 hover:bg-slate-700 hover:text-white transition-all duration-300 {{ request()->routeIs('admin.bitcoin.commands') ? 'bg-slate-700 text-white border-l-4 border-orange-500' : '' }}">
+                    <i class="fas fa-terminal w-5"></i>
+                    <span class="ml-3">Commands</span>
+                </a>
+                
                 <a href="{{ route('admin.clients.index') }}" class="flex items-center px-6 py-3 text-gray-300 hover:bg-slate-700 hover:text-white transition-all duration-300 {{ request()->routeIs('admin.clients.*') ? 'bg-slate-700 text-white border-l-4 border-orange-500' : '' }}">
                     <i class="fas fa-users w-5"></i>
                     <span class="ml-3">API Clients</span>
@@ -71,7 +81,6 @@
             
             <!-- Content Area -->
             <main class="flex-1 overflow-y-auto bg-gray-100 p-8">
-                <!-- Success/Error Messages -->
                 @if(session('success'))
                 <div class="bg-green-100 border-l-4 border-green-500 text-green-700 p-4 rounded mb-6 animate-fade-in">
                     <div class="flex items-center">
